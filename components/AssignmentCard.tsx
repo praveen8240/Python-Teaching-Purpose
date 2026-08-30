@@ -298,6 +298,8 @@ export function AssignmentCard({ a }: { a: Assignment }) {
                   initialCode={a.solutionCode}
                   initialInput={a.testInput}
                   expected={a.expectedOutput}
+                  url={a.url}
+                  urlLabel="Open on Codeforces"
                 />
               </div>
             )}
@@ -317,6 +319,8 @@ export function AssignmentCard({ a }: { a: Assignment }) {
                   initialCode={a.starterCode}
                   initialInput={a.testInput}
                   expected={a.expectedOutput}
+                  url={a.url}
+                  urlLabel="Open on Codeforces"
                 />
               </div>
             )}
