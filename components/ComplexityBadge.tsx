@@ -1,0 +1,1 @@
+export function ComplexityBadge({time,space}:{time:string;space:string}){return <div className="flex flex-wrap gap-2"><span className="badge bg-[#edf8f0] text-[#196b4b]">Time: {time}</span><span className="badge bg-[#fff7df] text-[#86520f]">Space: {space}</span></div>}
