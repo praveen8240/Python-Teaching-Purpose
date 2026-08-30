@@ -1,0 +1,9 @@
+- [x] Update `types/lesson.ts` to support LeetCode urls on `PracticeProblem`
+- [x] Update `components/PracticeProblem.tsx` to render the LeetCode link button
+- [x] Create folder structure for modular problems
+- [x] Write `content/problems/day2_to_5.ts` containing Day 2-5 problems
+- [x] Write `content/problems/day6_to_8.ts` containing Day 6-8 problems
+- [x] Write `content/problems/day9_to_11.ts` containing Day 9-11 problems
+- [x] Write `content/problems/day12_to_15.ts` containing Day 12-15 problems
+- [x] Rewrite `content/sessions.ts` to contain all 30 sessions and import the modular problems
+- [x] Test the build locally to ensure Next.js compiles clean with zero errors
