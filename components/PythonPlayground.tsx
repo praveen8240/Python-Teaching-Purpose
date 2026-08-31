@@ -12,6 +12,9 @@ import {
   Copy,
   Check,
   Terminal,
+  Type,
+  Minus,
+  Plus,
   Maximize2,
   Minimize2,
   ExternalLink,
@@ -29,7 +32,7 @@ const fontTheme = EditorView.theme({
   "&": { fontSize: "15px" },
   ".cm-gutters": { fontSize: "14px", cursor: "pointer" },
 });
-const fontThemeFS = EditorView.theme({
+const dynamicFontTheme = EditorView.theme({
   "&": { fontSize: "20px", lineHeight: "1.6" },
   ".cm-gutters": { fontSize: "18px", cursor: "pointer" },
   ".cm-content": { padding: "8px 0" },
@@ -69,9 +72,12 @@ export function PythonPlayground({
   const [fs, setFs] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [editorTheme, setEditorTheme] = useState<"light" | "dark">("light");
+  const [fontSize, setFontSize] = useState(15);
 
   useEffect(() => {
     setMounted(true);
+    const savedFs = localStorage.getItem("playground-font-size");
+    if (savedFs) setFontSize(parseInt(savedFs, 10));
     if (id) {
       const savedCode = localStorage.getItem(`playground-code-${id}`);
       const savedInput = localStorage.getItem(`playground-input-${id}`);
@@ -136,6 +142,22 @@ export function PythonPlayground({
     }
   }
   
+
+  const changeFontSize = (delta: number) => {
+    setFontSize(prev => {
+      const next = Math.max(10, Math.min(30, prev + delta));
+      localStorage.setItem("playground-font-size", next.toString());
+      return next;
+    });
+  };
+
+  const currentFontSize = fs ? fontSize + 5 : fontSize;
+  const dynamicFontTheme = EditorView.theme({
+    "&": { fontSize: `${currentFontSize}px`, lineHeight: fs ? "1.6" : "1.4" },
+    ".cm-gutters": { fontSize: `${currentFontSize - 1}px`, cursor: "pointer" },
+    ".cm-content": { padding: fs ? "8px 0" : "0" },
+  });
+
   const isLight = editorTheme === "light";
   
   const colors = {
@@ -187,6 +209,21 @@ export function PythonPlayground({
               </button>
             )}
             <button
+              onClick={() => changeFontSize(-1)}
+              title="Decrease font size"
+              className={`grid h-8 w-8 place-items-center rounded ${colors.iconHover}`}
+            >
+              <Minus size={16} />
+            </button>
+            <div className="flex items-center justify-center font-mono text-sm w-4">{currentFontSize}</div>
+            <button
+              onClick={() => changeFontSize(1)}
+              title="Increase font size"
+              className={`grid h-8 w-8 place-items-center rounded ${colors.iconHover}`}
+            >
+              <Plus size={16} />
+            </button>
+            <button
               onClick={() => setEditorTheme(isLight ? "dark" : "light")}
               title="Toggle theme"
               className={`grid h-8 w-8 place-items-center rounded ${colors.iconHover}`}
@@ -207,7 +244,7 @@ export function PythonPlayground({
             value={code}
             height="100%"
             theme={editorTheme}
-            extensions={[python(), indentUnit.of("    "), fontThemeFS, myLineNumbers]}
+            extensions={[python(), indentUnit.of("    "), dynamicFontTheme, myLineNumbers]}
             onChange={setCode}
             basicSetup={{
               lineNumbers: false,
@@ -326,6 +363,21 @@ export function PythonPlayground({
               </button>
             )}
             <button
+              onClick={() => changeFontSize(-1)}
+              title="Decrease font size"
+              className={`grid h-7 w-7 place-items-center rounded ${colors.iconHover}`}
+            >
+              <Minus size={14} />
+            </button>
+            <div className="flex items-center justify-center font-mono text-xs w-4">{currentFontSize}</div>
+            <button
+              onClick={() => changeFontSize(1)}
+              title="Increase font size"
+              className={`grid h-7 w-7 place-items-center rounded ${colors.iconHover}`}
+            >
+              <Plus size={14} />
+            </button>
+            <button
               onClick={() => setEditorTheme(isLight ? "dark" : "light")}
               title="Toggle theme"
               className={`grid h-7 w-7 place-items-center rounded ${colors.iconHover}`}
@@ -345,7 +397,7 @@ export function PythonPlayground({
           value={code}
           height="260px"
           theme={editorTheme}
-          extensions={[python(), indentUnit.of("    "), fontTheme, myLineNumbers]}
+          extensions={[python(), indentUnit.of("    "), dynamicFontTheme, myLineNumbers]}
           onChange={setCode}
           basicSetup={{
             lineNumbers: false,

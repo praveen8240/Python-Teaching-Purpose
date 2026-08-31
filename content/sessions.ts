@@ -322,8 +322,8 @@ export const sessions: Session[] = [
       {
         question: "What is the final output of this code?\n\nnums = [1, 2, 3, 4]\nfor n in nums:\n    if n % 2 == 0:\n        nums.remove(n)\nprint(nums)",
         options: ["[1, 3]", "[1, 2, 3, 4]", "[1, 3, 4]", "Raises an Error"],
-        answer: 2,
-        explanation: "Never modify a list while iterating over it! When 2 is removed, the remaining elements shift left. The iterator moves to the next index, entirely skipping 3! The safe way is to iterate over a copy: `for n in nums[:]`."
+        answer: 0,
+        explanation: "Never modify a list while iterating over it! When 2 is removed, the remaining elements shift left. The iterator moves to index 2, which is now 4, entirely skipping 3! It then processes and removes 4, leaving [1, 3]."
       },
       {
         question: "What is the final output of this code?\n\ngrid = [[0]] * 3\ngrid[0].append(1)\nprint(grid)",
