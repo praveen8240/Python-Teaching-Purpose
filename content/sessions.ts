@@ -238,9 +238,11 @@ export const sessions: Session[] = [
         kind: "text",
         intro: "A Python list stores an ordered sequence. Indices are positions; valid positive indices run from 0 through len(arr)-1.",
         bullets: [
-          "Access by index is O(1).",
-          "Insert/delete in the middle shifts elements and is O(n).",
-          "In-place work changes the original list object."
+          "Access by index is O(1) — Python lists use a contiguous array of pointers internally.",
+          "Insert/delete in the middle shifts all subsequent elements → O(n). Append is amortized O(1).",
+          "In-place operations (reverse, sort, swap) modify the original list object directly.",
+          "Negative indices count from the end: arr[-1] is the last element, arr[-2] is second-to-last.",
+          "Slicing arr[a:b] creates a NEW list — changes to the slice do NOT affect the original."
         ]
       },
       {
@@ -274,6 +276,34 @@ export const sessions: Session[] = [
         intro: "Choose start, stop, and step. A slice produces a new list, so changing it does not update the original."
       },
       {
+        id: "array-ops",
+        title: "Hands-on: Insert, Delete & Reverse",
+        kind: "worked",
+        intro: "Practice the fundamental list mutations before tackling algorithm problems.",
+        examples: [
+          {
+            title: "Insert & Delete — see the shift",
+            code: "arr = [10, 20, 30, 40, 50]\nprint('Before insert:', arr)\narr.insert(2, 99)  # insert 99 at index 2\nprint('After insert:', arr)\n\narr.pop(2)  # remove element at index 2\nprint('After delete:', arr)",
+            expected: "Before insert: [10, 20, 30, 40, 50]\nAfter insert: [10, 20, 99, 30, 40, 50]\nAfter delete: [10, 20, 30, 40, 50]",
+            explanation: "insert(i, val) pushes everything at index i and beyond one position right — O(n). pop(i) shifts everything left — also O(n). Both are expensive in the middle but cheap at the end.",
+            complexity: { time: "O(n)", space: "O(1)" }
+          },
+          {
+            title: "Reverse a subarray with two pointers",
+            code: "arr = [1, 2, 3, 4, 5, 6, 7]\n# Reverse elements from index 2 to 5\nleft, right = 2, 5\nwhile left < right:\n    arr[left], arr[right] = arr[right], arr[left]\n    left += 1\n    right -= 1\nprint('After reversing [2:6]:', arr)",
+            expected: "After reversing [2:6]: [1, 2, 6, 5, 4, 3, 7]",
+            explanation: "The two-pointer swap pattern is the building block of many array algorithms (rotation, palindrome check, partitioning). It runs in O(n/2) = O(n) time and O(1) space.",
+            complexity: { time: "O(n)", space: "O(1)" }
+          }
+        ]
+      },
+      {
+        id: "tricky_quiz",
+        title: "Brain Teasers: Python Traps",
+        kind: "quiz",
+        intro: "Let's see if you can spot the common Python array traps that catch most beginners!"
+      },
+      {
         id: "rotate",
         title: "LC 189 - Rotate Array",
         kind: "rotate",
@@ -287,6 +317,20 @@ export const sessions: Session[] = [
         intro: "A fast pointer scans; a slow pointer owns the compact unique prefix.",
         problems: [day2_to_5Problems.lc26]
       }
+    ],
+    quiz: [
+      {
+        question: "What is the final output of this code?\n\nnums = [1, 2, 3, 4]\nfor n in nums:\n    if n % 2 == 0:\n        nums.remove(n)\nprint(nums)",
+        options: ["[1, 3]", "[1, 2, 3, 4]", "[1, 3, 4]", "Raises an Error"],
+        answer: 2,
+        explanation: "Never modify a list while iterating over it! When 2 is removed, the remaining elements shift left. The iterator moves to the next index, entirely skipping 3! The safe way is to iterate over a copy: `for n in nums[:]`."
+      },
+      {
+        question: "What is the final output of this code?\n\ngrid = [[0]] * 3\ngrid[0].append(1)\nprint(grid)",
+        options: ["[[0, 1], [0], [0]]", "[[0, 1], [0, 1], [0, 1]]", "Raises an Error", "[[0]]"],
+        answer: 1,
+        explanation: "The `*` operator on a list containing a mutable object (like another list) copies the REFERENCE, not the object. All three rows point to the exact same list in memory! Use a list comprehension instead: `[[0] for _ in range(3)]`."
+      }
     ]
   },
   {
@@ -294,46 +338,82 @@ export const sessions: Session[] = [
     day: 2,
     title: "Prefix Sums & Range Queries",
     duration: "2 hours",
-    description: "Learn precomputation methods to solve range-sum queries in O(1) time.",
+    description: "Learn precomputation methods to solve range-sum queries in O(1) time, handle range updates efficiently, and compute products without division.",
     focus: ["Running totals", "O(1) range sums", "difference arrays", "prefix/suffix products"],
-    objectives: ["Build and query prefix sum arrays", "Implement 1D range modifications", "Solve products except self using prefix/suffix tracking"],
+    objectives: ["Build and query prefix sum arrays", "Implement 1D range modifications with difference arrays", "Solve products except self using prefix/suffix tracking", "Compare naive vs precomputed approaches"],
     sections: [
       {
-        id: "overview",
-        title: "Prefix Sum Concept",
-        kind: "prefix-sum",
-        intro: "Precomputing partial sums lets you query any range sum in O(1) time instead of O(n).",
+        id: "motivation",
+        title: "Why Prefix Sums?",
+        kind: "text",
+        intro: "Imagine you have an array of 100,000 numbers and 50,000 queries asking 'what is the sum from index L to R?' Without precomputation, each query scans the range — O(n) per query, O(n×q) total. With a prefix sum array built once in O(n), every query answers in O(1).",
         bullets: [
-          "P[i] stores the sum of elements from index 0 to i-1.",
-          "Sum of range [L, R] is simply P[R+1] - P[L].",
-          "Difference arrays allow range updates in O(1) time."
+          "Naive approach: loop from L to R for each query → O(n) per query → too slow for large inputs.",
+          "Prefix sum P[i] = sum of elements from index 0 to i-1. Build once in O(n).",
+          "Range sum formula: Sum(L, R) = P[R+1] − P[L]. Just one subtraction → O(1)!",
+          "This 'precompute once, query many times' pattern appears everywhere in competitive programming."
         ]
       },
       {
-        id: "worked",
+        id: "builder",
+        title: "Interactive Prefix Sum Builder",
+        kind: "prefix-sum",
+        intro: "Step through building a prefix sum array one element at a time. Watch how P[i+1] = P[i] + A[i] accumulates."
+      },
+      {
+        id: "worked_prefix",
         title: "Worked Examples: Prefix Sums",
         kind: "worked",
-        intro: "See how prefix sums are implemented in real Python code.",
+        intro: "Run these examples to see prefix sums in action.",
         examples: [
           {
             title: "Build Prefix Array",
-            code: "arr = [3, 1, 4, 1, 5]\nprefix = [0] * (len(arr) + 1)\nfor i in range(len(arr)):\n    prefix[i+1] = prefix[i] + arr[i]\nprint('Prefix array:', prefix)",
-            expected: "Prefix array: [0, 3, 4, 8, 9, 14]",
-            explanation: "We allocate an array of size n+1 initialized to 0. We iteratively add the current element to the previous prefix sum."
+            code: "arr = [3, 1, 4, 1, 5]\nprefix = [0] * (len(arr) + 1)\nfor i in range(len(arr)):\n    prefix[i+1] = prefix[i] + arr[i]\nprint('Original:', arr)\nprint('Prefix:  ', prefix)\nprint()\n# Quick check: sum of entire array\nprint('Sum of all:', prefix[-1])",
+            expected: "Original: [3, 1, 4, 1, 5]\nPrefix:   [0, 3, 4, 8, 9, 14]\n\nSum of all: 14",
+            explanation: "We allocate an array of size n+1 initialized to 0. We iteratively add the current element to the previous prefix sum. P[0]=0 acts as a sentinel so the range formula works cleanly.",
+            complexity: { time: "O(n)", space: "O(n)" }
           },
           {
             title: "O(1) Range Query",
-            code: "prefix = [0, 3, 4, 8, 9, 14]\n# Query sum for indices L=1 to R=3 (elements 1, 4, 1)\nL = 1\nR = 3\nrange_sum = prefix[R+1] - prefix[L]\nprint(f'Sum of indices {L} to {R}:', range_sum)",
-            expected: "Sum of indices 1 to 3: 6",
-            explanation: "The sum of elements at index 1, 2, and 3 is 1 + 4 + 1 = 6. This perfectly matches prefix[4] - prefix[1] = 9 - 3 = 6."
+            code: "arr = [3, 1, 4, 1, 5]\nprefix = [0, 3, 4, 8, 9, 14]\n\n# Query 1: sum of indices 1 to 3 (elements: 1, 4, 1)\nL, R = 1, 3\nprint(f'Sum[{L}..{R}] = P[{R+1}] - P[{L}] = {prefix[R+1]} - {prefix[L]} = {prefix[R+1] - prefix[L]}')\n\n# Query 2: sum of indices 0 to 4 (entire array)\nL, R = 0, 4\nprint(f'Sum[{L}..{R}] = P[{R+1}] - P[{L}] = {prefix[R+1]} - {prefix[L]} = {prefix[R+1] - prefix[L]}')\n\n# Query 3: single element at index 2\nL, R = 2, 2\nprint(f'Sum[{L}..{R}] = P[{R+1}] - P[{L}] = {prefix[R+1]} - {prefix[L]} = {prefix[R+1] - prefix[L]}')",
+            expected: "Sum[1..3] = P[4] - P[1] = 9 - 3 = 6\nSum[0..4] = P[5] - P[0] = 14 - 0 = 14\nSum[2..2] = P[3] - P[2] = 8 - 4 = 4",
+            explanation: "Each query is just ONE subtraction regardless of range size. Even querying a single element works: P[i+1] - P[i] = arr[i].",
+            complexity: { time: "O(1) per query", space: "O(n) for prefix array" }
           }
         ]
       },
       {
-        id: "range_queries",
+        id: "diff_array",
+        title: "Difference Array — O(1) Range Updates",
+        kind: "diff-array",
+        intro: "What if instead of querying ranges, you need to UPDATE ranges? Adding +3 to every element from index 2 to 5 normally takes O(n). With a difference array, it takes O(1) per update!"
+      },
+      {
+        id: "worked_diff",
+        title: "Worked Example: Difference Array",
+        kind: "worked",
+        intro: "See difference arrays applied to a real problem.",
+        examples: [
+          {
+            title: "Range increment with difference array",
+            code: "# Add +3 to range [2,5] and +2 to range [0,3]\nn = 8\ndiff = [0] * (n + 1)\n\n# Update 1: add +3 to indices 2..5\ndiff[2] += 3\ndiff[6] -= 3\nprint('After update 1 (add 3 to [2..5]):', diff)\n\n# Update 2: add +2 to indices 0..3\ndiff[0] += 2\ndiff[4] -= 2\nprint('After update 2 (add 2 to [0..3]):', diff)\n\n# Reconstruct: prefix sum of diff array\nresult = [0] * n\nresult[0] = diff[0]\nfor i in range(1, n):\n    result[i] = result[i-1] + diff[i]\nprint('Final array:', result)",
+            expected: "After update 1 (add 3 to [2..5]): [0, 0, 3, 0, 0, 0, -3, 0, 0]\nAfter update 2 (add 2 to [0..3]): [2, 0, 3, 0, -2, 0, -3, 0, 0]\nFinal array: [2, 2, 5, 5, 3, 3, 0, 0]",
+            explanation: "Each range update is just 2 operations: diff[L] += val and diff[R+1] -= val. After all updates, one prefix-sum pass reconstructs the final array. Total: O(q + n) instead of O(q × n).",
+            complexity: { time: "O(n + q)", space: "O(n)" }
+          }
+        ]
+      },
+      {
+        id: "product",
+        title: "Product of Array Except Self",
+        kind: "product-except-self",
+        intro: "LC 238: Given an array, return an array where result[i] is the product of all elements EXCEPT arr[i] — without using division. The trick: precompute left-products and right-products, then multiply them."
+      },
+      {
+        id: "practice",
         title: "Practice Problems",
         kind: "practice",
-        intro: "Apply prefix sums and suffix accumulation techniques.",
+        intro: "Apply prefix sums and product accumulation techniques.",
         problems: [day2_to_5Problems.lc303, day2_to_5Problems.lc238]
       }
     ]
