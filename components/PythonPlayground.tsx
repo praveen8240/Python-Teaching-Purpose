@@ -57,26 +57,24 @@ export function PythonPlayground({
   urlLabel?: string;
   id?: string;
 }) {
-  const [code, setCode] = useState(() => {
-      if (typeof window !== "undefined" && id) {
-        const saved = localStorage.getItem(`playground-code-${id}`);
-        if (saved !== null) return saved;
-      }
-      return initialCode;
-    }),
-    [input, setInput] = useState(() => {
-      if (typeof window !== "undefined" && id) {
-        const saved = localStorage.getItem(`playground-input-${id}`);
-        if (saved !== null) return saved;
-      }
-      return initialInput;
-    }),
-    [result, setResult] = useState<Result | null>(null),
-    [running, setRunning] = useState(false),
-    [copied, setCopied] = useState(false),
-    [fs, setFs] = useState(false),
-    [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [code, setCode] = useState(initialCode);
+  const [input, setInput] = useState(initialInput);
+  const [result, setResult] = useState<Result | null>(null);
+  const [running, setRunning] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [fs, setFs] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (id) {
+      const savedCode = localStorage.getItem(`playground-code-${id}`);
+      const savedInput = localStorage.getItem(`playground-input-${id}`);
+      if (savedCode !== null) setCode(savedCode);
+      if (savedInput !== null) setInput(savedInput);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (id && mounted) {
       localStorage.setItem(`playground-code-${id}`, code);

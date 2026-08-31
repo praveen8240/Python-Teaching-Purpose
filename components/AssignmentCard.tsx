@@ -155,6 +155,12 @@ export function AssignmentCard({ a }: { a: Assignment }) {
         <div className="min-w-0">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <RatingBadge rating={a.rating} />
+            {a.company && (
+              <div className="flex items-center gap-1.5 rounded-full border border-[#dce4dd] bg-white px-2 py-0.5" title={`Asked in ${a.company.name}`}>
+                <img src={a.company.logoUrl} alt={a.company.name} className="h-4 w-auto object-contain" />
+                <span className="text-xs font-semibold text-[#405047]">{a.company.name}</span>
+              </div>
+            )}
             {a.tags.map((t) => (
               <TagBadge key={t} tag={t} />
             ))}
