@@ -316,6 +316,13 @@ export const sessions: Session[] = [
         kind: "dedupe",
         intro: "A fast pointer scans; a slow pointer owns the compact unique prefix.",
         problems: [day2_to_5Problems.lc26]
+      },
+      {
+        id: "extra_practice",
+        title: "Extra Practice: Core Array Patterns",
+        kind: "practice",
+        intro: "A solid 3-hour session needs extra drilling! Practice removing elements, merging from the back, squaring extremes, and finding max profit.",
+        problems: [day2_to_5Problems.lc27, day2_to_5Problems.lc88, day2_to_5Problems.lc121, day2_to_5Problems.lc66, day2_to_5Problems.lc977]
       }
     ],
     quiz: [
@@ -413,8 +420,8 @@ export const sessions: Session[] = [
         id: "practice",
         title: "Practice Problems",
         kind: "practice",
-        intro: "Apply prefix sums and product accumulation techniques.",
-        problems: [day2_to_5Problems.lc303, day2_to_5Problems.lc238]
+        intro: "Apply prefix sums, difference arrays, and product accumulation techniques.",
+        problems: [day2_to_5Problems.lc1480, day2_to_5Problems.lc303, day2_to_5Problems.lc724, day2_to_5Problems.lc1109, day2_to_5Problems.lc238]
       }
     ]
   },
@@ -425,47 +432,71 @@ export const sessions: Session[] = [
     day: 3,
     title: "Hashing - Frequency Maps & Sets",
     duration: "2 hours",
-    description: "Master fast elements lookup using hash tables, sets, and frequency counters.",
+    description: "Master fast element lookup using hash tables, sets, and frequency counters. Understand when O(1) average-time lookup transforms a brute-force O(n²) into elegant O(n).",
     focus: ["dict, set, Counter", "duplicate detection", "first non-repeating", "fixed-slot list"],
-    objectives: ["Leverage O(1) average lookup times", "Detect duplicates in linear time", "Utilize Counter for element counts"],
+    objectives: ["Leverage O(1) average lookup times", "Detect duplicates in linear time", "Utilize Counter for element counts", "Know when a fixed-size list beats a dict"],
     sections: [
       {
         id: "overview",
         title: "Hash Tables under the hood",
         kind: "hashing",
-        intro: "Python's dict and set use hash tables to search, insert, and delete elements in constant O(1) average time.",
+        intro: "Python's dict and set use hash tables to search, insert, and delete elements in constant O(1) average time. This single fact turns many O(n²) brute-force solutions into clean O(n) algorithms.",
         bullets: [
-          "Sets contain only unique items, checking membership in O(1).",
-          "Dicts store key-value pairs, tracking frequencies easily.",
-          "Alphabet frequency can be tracked using a size-26 list for speed."
+          "dict: maps keys → values. Checking 'if key in d' is O(1) average, not O(n) like a list.",
+          "set: stores only unique items. Adding duplicates silently does nothing. 'in' check is O(1).",
+          "collections.Counter: a dict subclass that counts hashable objects. Counter('aab') → {'a': 2, 'b': 1}.",
+          "For alphabet-only problems, a size-26 list can be faster than a dict since no hashing is needed.",
+          "Gotcha: dict keys must be hashable (immutable). Lists can't be keys, but tuples and strings can."
         ]
       },
       {
+        id: "set_dedup",
+        title: "Interactive: Duplicate Detection with set()",
+        kind: "set-dedup",
+        intro: "Watch how a set catches duplicates in real-time. Each 'in' check is O(1) — no scanning needed!"
+      },
+      {
         id: "worked",
-        title: "Worked Examples: Hashing in Python",
+        title: "Worked Examples: Hashing Patterns",
         kind: "worked",
-        intro: "Understand how to implement frequency maps and unique lookups.",
+        intro: "Build intuition for the three most common hashing patterns you'll use in interviews.",
         examples: [
           {
-            title: "Frequency Map with dict.get()",
-            code: "arr = ['apple', 'banana', 'apple']\nfreq = {}\nfor item in arr:\n    freq[item] = freq.get(item, 0) + 1\nprint('Frequencies:', freq)",
-            expected: "Frequencies: {'apple': 2, 'banana': 1}",
-            explanation: "The .get(item, 0) safely returns 0 if the key doesn't exist yet, avoiding a KeyError."
+            title: "Pattern 1: Frequency Map with dict",
+            code: "from collections import Counter\n\narr = ['apple', 'banana', 'apple', 'cherry', 'banana', 'apple']\n\n# Method 1: Manual counting with dict.get()\nfreq = {}\nfor item in arr:\n    freq[item] = freq.get(item, 0) + 1\nprint('Manual:', freq)\n\n# Method 2: Counter (one-liner!)\nprint('Counter:', dict(Counter(arr)))\n\n# Most common element\nprint('Most common:', Counter(arr).most_common(1)[0])",
+            expected: "Manual: {'apple': 3, 'banana': 2, 'cherry': 1}\nCounter: {'apple': 3, 'banana': 2, 'cherry': 1}\nMost common: ('apple', 3)",
+            explanation: "dict.get(key, default) avoids KeyError. Counter is a shortcut that does the same thing internally. most_common(k) returns the k most frequent elements.",
+            complexity: { time: "O(n)", space: "O(k) where k = unique elements" }
           },
           {
-            title: "Two Sum with a Dictionary",
-            code: "arr = [2, 7, 11, 15]\ntarget = 9\nseen = {}\nfor i, num in enumerate(arr):\n    complement = target - num\n    if complement in seen:\n        print(f'Found indices: {seen[complement]} and {i}')\n        break\n    seen[num] = i",
-            expected: "Found indices: 0 and 1",
-            explanation: "Instead of searching the array again (O(n)), we just check if the complement exists in our dictionary (O(1))."
+            title: "Pattern 2: First Non-Repeating Character",
+            code: "from collections import Counter\n\ndef first_unique(s):\n    count = Counter(s)\n    for i, ch in enumerate(s):\n        if count[ch] == 1:\n            return i\n    return -1\n\nprint(first_unique('leetcode'))   # 0 → 'l'\nprint(first_unique('loveleetcode'))  # 2 → 'v'\nprint(first_unique('aabb'))       # -1",
+            expected: "0\n2\n-1",
+            explanation: "First pass: count all characters in O(n). Second pass: find the first character with count == 1. Total: O(n) time, O(1) space (at most 26 lowercase letters).",
+            complexity: { time: "O(n)", space: "O(1) for lowercase alphabet" }
+          },
+          {
+            title: "Pattern 3: Two Sum with a Dictionary",
+            code: "arr = [2, 7, 11, 15]\ntarget = 9\nseen = {}  # value → index\n\nfor i, num in enumerate(arr):\n    complement = target - num\n    if complement in seen:      # O(1) lookup!\n        print(f'Indices: {seen[complement]} and {i}')\n        print(f'Values: {complement} + {num} = {target}')\n        break\n    seen[num] = i               # Store for future lookups",
+            expected: "Indices: 0 and 1\nValues: 2 + 7 = 9",
+            explanation: "Instead of nested loops (O(n²)), we check if target-current exists in our hash map — O(1) per check. One pass through the array: O(n) total.",
+            complexity: { time: "O(n)", space: "O(n)" }
+          },
+          {
+            title: "When a fixed-size list wins over dict",
+            code: "# Count lowercase letter frequencies\ndef char_freq_dict(s):\n    freq = {}\n    for ch in s:\n        freq[ch] = freq.get(ch, 0) + 1\n    return freq\n\ndef char_freq_list(s):\n    freq = [0] * 26\n    for ch in s:\n        freq[ord(ch) - ord('a')] += 1\n    return freq\n\ns = 'helloworld'\nprint('Dict:', char_freq_dict(s))\nprint('List:', char_freq_list(s))\nprint('\\nList is faster: no hashing overhead, just index math!')",
+            expected: "Dict: {'h': 1, 'e': 1, 'l': 3, 'o': 2, 'w': 1, 'r': 1, 'd': 1}\nList: [0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 3, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]\n\nList is faster: no hashing overhead, just index math!",
+            explanation: "When the key space is small and fixed (26 letters, 10 digits), a plain list is faster than a dict. ord('c') - ord('a') maps 'a'→0, 'b'→1, ..., 'z'→25.",
+            complexity: { time: "O(n)", space: "O(1) — always 26 slots" }
           }
         ]
       },
       {
         id: "basics",
-        title: "Practice Problems",
+        title: "Practice Problems: Basics",
         kind: "practice",
-        intro: "Basic lookup and hashing drills.",
-        problems: [day2_to_5Problems.lc1, day2_to_5Problems.lc387]
+        intro: "Apply frequency maps and set lookups to classic interview problems.",
+        problems: [day2_to_5Problems.lc1, day2_to_5Problems.lc387, day2_to_5Problems.lc217, day2_to_5Problems.lc349, day2_to_5Problems.lc771]
       }
     ]
   },
@@ -474,27 +505,61 @@ export const sessions: Session[] = [
     day: 3,
     title: "Hashing - Applied Techniques",
     duration: "2 hours",
-    description: "Solve complex array problems by combining hashing with prefix sums and XOR math.",
+    description: "Go beyond basic lookups: use derived keys to group related items, combine prefix sums with dicts for subarray counting, and discover XOR's magical cancellation property.",
     focus: ["Derived-key hashing", "prefix sum with dict", "XOR cancellation"],
-    objectives: ["Represent complex collections as dictionary keys", "Find subarrays summing to K in O(n)", "Find single odd-occurrence elements"],
+    objectives: ["Represent complex collections as dictionary keys", "Find subarrays summing to K in O(n)", "Find single odd-occurrence elements", "Map strings to canonical forms for grouping"],
     sections: [
       {
         id: "overview",
-        title: "Advanced Keys & Prefix Hashes",
+        title: "Advanced Hashing Strategies",
         kind: "text",
-        intro: "Using sorted strings or tuples as dictionary keys enables grouping related sets of items.",
+        intro: "Three powerful patterns that combine hashing with other techniques to solve problems that seem impossible at first glance.",
         bullets: [
-          "Group items with identical signatures (like sorted anagrams).",
-          "Store previous prefix sums in a dictionary to count matching ranges.",
-          "XOR logic cancels identical element pairs: A ^ A = 0."
+          "Derived keys: sorted('eat') = 'aet' = sorted('tea'). Same key → same anagram group. Use tuple or frozenset as dict keys.",
+          "Prefix sum + dict: store running sums as keys. If prefix[j] - prefix[i] = K, then subarray [i+1..j] sums to K. Check if (current_sum - K) is in the dict.",
+          "XOR cancellation: A ^ A = 0, A ^ 0 = A. XOR all elements → pairs cancel, only the unique one survives. O(1) space!"
+        ]
+      },
+      {
+        id: "anagram_viz",
+        title: "Interactive: Anagram Grouping with Derived Keys",
+        kind: "anagram-group",
+        intro: "Watch how sorting each word creates a 'canonical key' that groups anagrams together. The dict does the heavy lifting!"
+      },
+      {
+        id: "xor_viz",
+        title: "Interactive: XOR Cancellation — Find the Single Number",
+        kind: "xor",
+        intro: "Step through XORing all elements in an array. Pairs cancel to 0, leaving only the number that appears once. Pure bit magic!"
+      },
+      {
+        id: "worked_applied",
+        title: "Worked Examples: Applied Techniques",
+        kind: "worked",
+        intro: "Detailed walkthroughs of the three advanced patterns.",
+        examples: [
+          {
+            title: "Subarray Sum Equals K (Prefix Sum + Dict)",
+            code: "def subarray_sum(nums, k):\n    count = 0\n    prefix_sum = 0\n    seen = {0: 1}  # prefix_sum → how many times we've seen it\n    \n    for num in nums:\n        prefix_sum += num\n        # If prefix_sum - k exists, there's a subarray summing to k\n        if prefix_sum - k in seen:\n            count += seen[prefix_sum - k]\n        seen[prefix_sum] = seen.get(prefix_sum, 0) + 1\n    \n    return count\n\nnums = [1, 1, 1]\nk = 2\nprint(f'Subarrays summing to {k}:', subarray_sum(nums, k))\n\nnums2 = [1, 2, 3]\nk2 = 3\nprint(f'Subarrays summing to {k2}:', subarray_sum(nums2, k2))",
+            expected: "Subarrays summing to 2: 2\nSubarrays summing to 3: 2",
+            explanation: "Key insight: if prefix_sum[j] - prefix_sum[i] = k, then sum(nums[i+1..j]) = k. We store prefix sums in a dict and check if (current - k) was seen before. The {0: 1} initialization handles subarrays starting from index 0.",
+            complexity: { time: "O(n)", space: "O(n)" }
+          },
+          {
+            title: "Isomorphic String Mapping (Two-Way Dict)",
+            code: "def is_isomorphic(s, t):\n    s_to_t = {}\n    t_to_s = {}\n    for c1, c2 in zip(s, t):\n        if c1 in s_to_t and s_to_t[c1] != c2:\n            return False\n        if c2 in t_to_s and t_to_s[c2] != c1:\n            return False\n        s_to_t[c1] = c2\n        t_to_s[c2] = c1\n    return True\n\nprint('egg ↔ add:', is_isomorphic('egg', 'add'))    # True\nprint('foo ↔ bar:', is_isomorphic('foo', 'bar'))    # False\nprint('paper ↔ title:', is_isomorphic('paper', 'title'))  # True",
+            expected: "egg ↔ add: True\nfoo ↔ bar: False\npaper ↔ title: True",
+            explanation: "Two dicts enforce a bijective mapping. If 'o' maps to 'a', and we later see 'o' → 'r', that's a conflict → False. Checking both directions prevents 'ab' → 'aa' from passing.",
+            complexity: { time: "O(n)", space: "O(1)" }
+          }
         ]
       },
       {
         id: "applied",
-        title: "Practice Problems",
+        title: "Practice Problems: Applied Hashing",
         kind: "practice",
-        intro: "Group anagrams, check prefix target ranges, and apply bitwise logic.",
-        problems: [day2_to_5Problems.lc49, day2_to_5Problems.lc560, day2_to_5Problems.lc136]
+        intro: "Group anagrams, count subarrays, apply XOR, and test string mappings.",
+        problems: [day2_to_5Problems.lc49, day2_to_5Problems.lc560, day2_to_5Problems.lc136, day2_to_5Problems.lc205, day2_to_5Problems.lc242]
       }
     ]
   },

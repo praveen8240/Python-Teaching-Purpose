@@ -127,6 +127,245 @@ print(*product_except_self(nums))`,
     complexity: { time: "O(n)", space: "O(1) auxiliary" },
     commonMistakes: ["Using division, which fails if the input contains zero and violates the problem constraint.", "Using a nested loop resulting in O(n^2) complexity and TLE."]
   },
+  lc27: {
+    id: "lc27",
+    title: "LC 27 - Remove Element",
+    url: "https://leetcode.com/problems/remove-element/",
+    statement: "Given an integer array nums and an integer val, remove all occurrences of val in nums in-place. The order of the elements may be changed. Then return the number of elements in nums which are not equal to val.",
+    inputFormat: "Line 1: space-separated integers (nums)\nLine 2: integer val",
+    outputFormat: "Line 1: integer k\nLine 2: first k elements of nums",
+    constraints: ["0 <= len(nums) <= 100", "0 <= nums[i] <= 50", "0 <= val <= 100"],
+    hint: "Use a pointer 'slow' that keeps track of where the next non-val element should be placed while 'fast' iterates through the array.",
+    starterCode: `def remove_element(nums, val):
+    slow = 0
+    for fast in range(len(nums)):
+        if nums[fast] != val:
+            nums[slow] = nums[fast]
+            slow += 1
+    return slow
+
+nums = list(map(int, input().split()))
+val = int(input())
+k = remove_element(nums, val)
+print(k)
+print(nums[:k])`,
+    testInput: "3 2 2 3\n3\n",
+    expectedOutput: "2\n[2, 2]",
+    explanation: "The elements not equal to 3 are 2 and 2. Thus, k = 2.",
+    complexity: { time: "O(n)", space: "O(1)" },
+    commonMistakes: ["Trying to use nums.remove(val) in a loop, which is O(n^2) and causes index shifting bugs."]
+  },
+  lc88: {
+    id: "lc88",
+    title: "LC 88 - Merge Sorted Array",
+    url: "https://leetcode.com/problems/merge-sorted-array/",
+    statement: "You are given two integer arrays nums1 and nums2, sorted in non-decreasing order, and two integers m and n, representing the number of elements in nums1 and nums2 respectively.\nMerge nums1 and nums2 into a single array sorted in non-decreasing order. Modify nums1 in-place.",
+    inputFormat: "Line 1: m elements of nums1 followed by n zeros\nLine 2: integer m\nLine 3: n elements of nums2\nLine 4: integer n",
+    outputFormat: "Print the modified nums1 array.",
+    constraints: ["nums1.length == m + n", "nums2.length == n", "0 <= m, n <= 200"],
+    hint: "If you merge from the front, you might overwrite elements in nums1. Try merging from the back (right to left) using 3 pointers.",
+    starterCode: `def merge(nums1, m, nums2, n):
+    p1 = m - 1
+    p2 = n - 1
+    p = m + n - 1
+    
+    while p1 >= 0 and p2 >= 0:
+        if nums1[p1] > nums2[p2]:
+            nums1[p] = nums1[p1]
+            p1 -= 1
+        else:
+            nums1[p] = nums2[p2]
+            p2 -= 1
+        p -= 1
+        
+    # If any elements remain in nums2, copy them over
+    while p2 >= 0:
+        nums1[p] = nums2[p2]
+        p2 -= 1
+        p -= 1
+
+nums1 = list(map(int, input().split()))
+m = int(input())
+nums2 = list(map(int, input().split()))
+n = int(input())
+merge(nums1, m, nums2, n)
+print(nums1)`,
+    testInput: "1 2 3 0 0 0\n3\n2 5 6\n3\n",
+    expectedOutput: "[1, 2, 2, 3, 5, 6]",
+    explanation: "We merge [1,2,3] and [2,5,6]. Working backwards prevents us from overwriting values in nums1 that we haven't processed yet.",
+    complexity: { time: "O(m + n)", space: "O(1)" },
+    commonMistakes: ["Merging from the front and having to shift elements O(n^2)", "Forgetting to copy the remaining elements of nums2 if nums1 exhausts first."]
+  },
+  lc121: {
+    id: "lc121",
+    title: "LC 121 - Best Time to Buy and Sell Stock",
+    url: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
+    statement: "You are given an array prices where prices[i] is the price of a given stock on the ith day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock. Return the maximum profit you can achieve.",
+    inputFormat: "Space-separated integers representing prices.",
+    outputFormat: "Integer representing the max profit.",
+    constraints: ["1 <= len(prices) <= 10^5", "0 <= prices[i] <= 10^4"],
+    hint: "As you iterate through the prices, keep track of the minimum price seen so far. At each step, calculate the profit if you sold today and update the maximum profit.",
+    starterCode: `def max_profit(prices):
+    if not prices: return 0
+    
+    min_price = float('inf')
+    max_prof = 0
+    
+    for price in prices:
+        if price < min_price:
+            min_price = price
+        elif price - min_price > max_prof:
+            max_prof = price - min_price
+            
+    return max_prof
+
+prices = list(map(int, input().split()))
+print(max_profit(prices))`,
+    testInput: "7 1 5 3 6 4\n",
+    expectedOutput: "5",
+    explanation: "Buy on day 2 (price = 1) and sell on day 5 (price = 6), profit = 6-1 = 5.",
+    complexity: { time: "O(n)", space: "O(1)" },
+    commonMistakes: ["Using nested loops to check all pairs of days, which is O(n^2) and gives TLE."]
+  },
+  lc66: {
+    id: "lc66",
+    title: "LC 66 - Plus One",
+    url: "https://leetcode.com/problems/plus-one/",
+    statement: "You are given a large integer represented as an integer array digits, where each digits[i] is the ith digit of the integer. The digits are ordered from most significant to least significant in left-to-right order. Increment the large integer by one and return the resulting array of digits.",
+    inputFormat: "Space-separated digits on a single line.",
+    outputFormat: "Space-separated array of resulting digits.",
+    constraints: ["1 <= digits.length <= 100", "0 <= digits[i] <= 9"],
+    hint: "Start from the rightmost digit. If it is 9, it becomes 0 and you carry 1 to the left. If it is not 9, just add 1 and you are done!",
+    starterCode: `def plus_one(digits):
+    for i in range(len(digits) - 1, -1, -1):
+        if digits[i] == 9:
+            digits[i] = 0
+        else:
+            digits[i] += 1
+            return digits
+    return [1] + digits
+
+digits = list(map(int, input().split()))
+print(*plus_one(digits))`,
+    testInput: "1 2 9\n",
+    expectedOutput: "1 3 0",
+    explanation: "129 + 1 = 130. We iterate from the back, change 9 to 0, then increment 2 to 3 and return.",
+    complexity: { time: "O(n)", space: "O(1) in-place, or O(n) if resizing" },
+    commonMistakes: ["Converting the array to an integer, adding 1, and converting back to an array (can cause overflow in other languages, though Python handles arbitrarily large ints)."]
+  },
+  lc977: {
+    id: "lc977",
+    title: "LC 977 - Squares of a Sorted Array",
+    url: "https://leetcode.com/problems/squares-of-a-sorted-array/",
+    statement: "Given an integer array nums sorted in non-decreasing order, return an array of the squares of each number sorted in non-decreasing order.",
+    inputFormat: "Space-separated integers sorted in non-decreasing order.",
+    outputFormat: "Space-separated integers representing sorted squares.",
+    constraints: ["1 <= nums.length <= 10^4", "-10^4 <= nums[i] <= 10^4"],
+    hint: "Because the array is sorted, the largest squares will be at the extreme ends (either very negative or very positive). Use two pointers starting at the ends and build the result array from back to front.",
+    starterCode: `def sorted_squares(nums):
+    n = len(nums)
+    result = [0] * n
+    left, right = 0, n - 1
+    
+    for i in range(n - 1, -1, -1):
+        if abs(nums[left]) > abs(nums[right]):
+            result[i] = nums[left] ** 2
+            left += 1
+        else:
+            result[i] = nums[right] ** 2
+            right -= 1
+            
+    return result
+
+nums = list(map(int, input().split()))
+print(*sorted_squares(nums))`,
+    testInput: "-4 -1 0 3 10\n",
+    expectedOutput: "0 1 9 16 100",
+    explanation: "Squares are 16, 1, 0, 9, 100. After sorting, it becomes 0, 1, 9, 16, 100. The two-pointer approach avoids sorting which would be O(n log n).",
+    complexity: { time: "O(n)", space: "O(n)" },
+    commonMistakes: ["Squaring elements and then using .sort(), which gives O(n log n) time instead of the optimal O(n)."]
+  },
+  lc1480: {
+    id: "lc1480",
+    title: "LC 1480 - Running Sum of 1d Array",
+    url: "https://leetcode.com/problems/running-sum-of-1d-array/",
+    statement: "Given an array nums. We define a running sum of an array as runningSum[i] = sum(nums[0]…nums[i]). Return the running sum of nums.",
+    inputFormat: "Space-separated integers.",
+    outputFormat: "Space-separated running sum integers.",
+    constraints: ["1 <= nums.length <= 1000", "-10^6 <= nums[i] <= 10^6"],
+    hint: "You can modify the array in-place or create a new array where each element is the sum of the current element and the previous running sum.",
+    starterCode: `def running_sum(nums):
+    for i in range(1, len(nums)):
+        nums[i] += nums[i-1]
+    return nums
+
+nums = list(map(int, input().split()))
+print(*running_sum(nums))`,
+    testInput: "1 2 3 4\n",
+    expectedOutput: "1 3 6 10",
+    explanation: "Running sums are: [1, 1+2, 1+2+3, 1+2+3+4] = [1, 3, 6, 10].",
+    complexity: { time: "O(n)", space: "O(1) in-place" },
+    commonMistakes: ["Re-summing from index 0 to i for every element (O(n^2))."]
+  },
+  lc724: {
+    id: "lc724",
+    title: "LC 724 - Find Pivot Index",
+    url: "https://leetcode.com/problems/find-pivot-index/",
+    statement: "Given an array of integers nums, calculate the pivot index of this array. The pivot index is the index where the sum of all the numbers strictly to the left of the index is equal to the sum of all the numbers strictly to the index's right. If no such index exists, return -1.",
+    inputFormat: "Space-separated integers.",
+    outputFormat: "Integer representing the pivot index.",
+    constraints: ["1 <= nums.length <= 10^4", "-1000 <= nums[i] <= 1000"],
+    hint: "Total sum = left_sum + pivot_value + right_sum. Thus, right_sum = total_sum - left_sum - pivot_value.",
+    starterCode: `def pivot_index(nums):
+    total = sum(nums)
+    left_sum = 0
+    for i, x in enumerate(nums):
+        if left_sum == (total - left_sum - x):
+            return i
+        left_sum += x
+    return -1
+
+nums = list(map(int, input().split()))
+print(pivot_index(nums))`,
+    testInput: "1 7 3 6 5 6\n",
+    expectedOutput: "3",
+    explanation: "Left sum of index 3 (value 6) is 1+7+3 = 11. Right sum is 5+6 = 11.",
+    complexity: { time: "O(n)", space: "O(1)" },
+    commonMistakes: ["Recalculating sum for left and right halves on every iteration (O(n^2))."]
+  },
+  lc1109: {
+    id: "lc1109",
+    title: "LC 1109 - Corporate Flight Bookings",
+    url: "https://leetcode.com/problems/corporate-flight-bookings/",
+    statement: "There are n flights numbered from 1 to n. You are given an array of flight bookings bookings, where bookings[i] = [first_i, last_i, seats_i] represents a booking for flights first_i through last_i (inclusive) with seats_i seats reserved. Return an array answer of length n, where answer[i] is the total number of seats reserved for flight i.",
+    inputFormat: "Line 1: n\nLine 2: number of bookings\nNext lines: first last seats",
+    outputFormat: "Space-separated integers of reserved seats.",
+    constraints: ["1 <= n <= 2 * 10^4", "1 <= bookings.length <= 2 * 10^4"],
+    hint: "This is a textbook difference array problem! Add seats to 'first', and subtract seats from 'last + 1'. Then run a prefix sum.",
+    starterCode: `def corp_flight_bookings(bookings, n):
+    diff = [0] * (n + 1)
+    
+    for first, last, seats in bookings:
+        diff[first - 1] += seats
+        diff[last] -= seats
+        
+    for i in range(1, n):
+        diff[i] += diff[i-1]
+        
+    return diff[:-1]
+
+n = int(input())
+k = int(input())
+bookings = []
+for _ in range(k):
+    bookings.append(list(map(int, input().split())))
+print(*corp_flight_bookings(bookings, n))`,
+    testInput: "5\n3\n1 2 10\n2 3 20\n2 5 25\n",
+    expectedOutput: "10 55 45 25 25",
+    explanation: "Flight 1 gets 10. Flight 2 gets 10+20+25=55. We use a difference array to mark +seats at 'first' and -seats at 'last+1'.",
+    complexity: { time: "O(n + bookings.length)", space: "O(n)" },
+    commonMistakes: ["Iterating from first to last for every booking, which takes O(n * bookings.length) causing TLE."]
+  },
 
   // Day 3 Session 1
   lc1: {
@@ -268,6 +507,106 @@ print(single_number(nums))`,
     explanation: "1^1 is 0. 2^2 is 0. 4^0 is 4. The result of XORing all numbers is 4.",
     complexity: { time: "O(n)", space: "O(1)" },
     commonMistakes: ["Using a set or hash map, which violates the O(1) space complexity constraint."]
+  },
+  lc217: {
+    id: "lc217",
+    title: "LC 217 - Contains Duplicate",
+    url: "https://leetcode.com/problems/contains-duplicate/",
+    statement: "Given an integer array nums, return true if any value appears at least twice in the array, and return false if every element is distinct.",
+    inputFormat: "Space-separated integers.",
+    outputFormat: "True or False.",
+    constraints: ["1 <= nums.length <= 10^5", "-10^9 <= nums[i] <= 10^9"],
+    hint: "Add each number to a set. If a number is already in the set, you found a duplicate!",
+    starterCode: `def contains_duplicate(nums):
+    seen = set()
+    for num in nums:
+        if num in seen:
+            return True
+        seen.add(num)
+    return False
+
+nums = list(map(int, input().split()))
+print(contains_duplicate(nums))`,
+    testInput: "1 2 3 1\n",
+    expectedOutput: "True",
+    explanation: "The number 1 appears at indices 0 and 3.",
+    complexity: { time: "O(n)", space: "O(n)" },
+    commonMistakes: ["Using nested loops to compare every pair (O(n^2)).", "Sorting first (O(n log n)) when a set gives O(n)."]
+  },
+  lc349: {
+    id: "lc349",
+    title: "LC 349 - Intersection of Two Arrays",
+    url: "https://leetcode.com/problems/intersection-of-two-arrays/",
+    statement: "Given two integer arrays nums1 and nums2, return an array of their intersection. Each element in the result must be unique and you may return the result in any order.",
+    inputFormat: "Line 1: space-separated integers (nums1)\nLine 2: space-separated integers (nums2)",
+    outputFormat: "Space-separated unique intersection elements.",
+    constraints: ["1 <= nums.length <= 1000", "0 <= nums[i] <= 1000"],
+    hint: "Convert both arrays to sets. The intersection of two sets gives you the common unique elements in O(n + m) time.",
+    starterCode: `def intersection(nums1, nums2):
+    return list(set(nums1) & set(nums2))
+
+nums1 = list(map(int, input().split()))
+nums2 = list(map(int, input().split()))
+result = intersection(nums1, nums2)
+result.sort()
+print(*result)`,
+    testInput: "1 2 2 1\n2 2\n",
+    expectedOutput: "2",
+    explanation: "The intersection of {1, 2} and {2} is {2}.",
+    complexity: { time: "O(n + m)", space: "O(n + m)" },
+    commonMistakes: ["Not converting to sets, leading to duplicates in the result.", "Using nested loops for O(n * m) time."]
+  },
+  lc205: {
+    id: "lc205",
+    title: "LC 205 - Isomorphic Strings",
+    url: "https://leetcode.com/problems/isomorphic-strings/",
+    statement: "Given two strings s and t, determine if they are isomorphic. Two strings are isomorphic if the characters in s can be replaced to get t, preserving order. No two characters may map to the same character, but a character may map to itself.",
+    inputFormat: "Line 1: string s\nLine 2: string t",
+    outputFormat: "True or False.",
+    constraints: ["1 <= s.length <= 5 * 10^4", "s.length == t.length"],
+    hint: "Use two dictionaries: one mapping s→t and one mapping t→s. If a conflict arises in either direction, they are not isomorphic.",
+    starterCode: `def is_isomorphic(s, t):
+    s_to_t = {}
+    t_to_s = {}
+    for c1, c2 in zip(s, t):
+        if c1 in s_to_t and s_to_t[c1] != c2:
+            return False
+        if c2 in t_to_s and t_to_s[c2] != c1:
+            return False
+        s_to_t[c1] = c2
+        t_to_s[c2] = c1
+    return True
+
+s = input()
+t = input()
+print(is_isomorphic(s, t))`,
+    testInput: "egg\nadd\n",
+    expectedOutput: "True",
+    explanation: "e→a, g→d. The mapping is consistent in both directions.",
+    complexity: { time: "O(n)", space: "O(1) — at most 256 character mappings" },
+    commonMistakes: ["Only checking one direction (s→t) and missing cases like 'ab' → 'aa'.", "Using index-based comparison which is harder to reason about."]
+  },
+  lc771: {
+    id: "lc771",
+    title: "LC 771 - Jewels and Stones",
+    url: "https://leetcode.com/problems/jewels-and-stones/",
+    statement: "You're given strings jewels representing the types of stones that are jewels, and stones representing the stones you have. Each character in stones is a type of stone you have. You want to know how many of the stones you have are also jewels.",
+    inputFormat: "Line 1: string jewels\nLine 2: string stones",
+    outputFormat: "Integer count of jewels in stones.",
+    constraints: ["1 <= jewels.length, stones.length <= 50", "jewels and stones consist of only English letters", "All characters of jewels are unique"],
+    hint: "Convert jewels to a set for O(1) lookup. Then iterate through stones and count matches.",
+    starterCode: `def num_jewels_in_stones(jewels, stones):
+    jewel_set = set(jewels)
+    return sum(1 for s in stones if s in jewel_set)
+
+jewels = input()
+stones = input()
+print(num_jewels_in_stones(jewels, stones))`,
+    testInput: "aA\naAAbbbb\n",
+    expectedOutput: "3",
+    explanation: "'a' appears once and 'A' appears twice in stones → 3 jewels total.",
+    complexity: { time: "O(j + s)", space: "O(j)" },
+    commonMistakes: ["Nested loops checking each stone against each jewel character (O(j * s)).", "Forgetting that jewels is case-sensitive."]
   },
 
   // Day 4 Session 1
