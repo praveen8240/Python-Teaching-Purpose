@@ -762,6 +762,85 @@ print(longest_common_prefix(strs))`,
     complexity: { time: "O(s) where s is sum of characters in all strings", space: "O(1)" },
     commonMistakes: ["Not checking index out of bound conditions when checking strings of varying lengths."]
   },
+  lc28: {
+    id: "lc28",
+    title: "LC 28 - Find Index of First Occurrence",
+    url: "https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/",
+    statement: "Given two strings haystack and needle, return the index of the first occurrence of needle in haystack, or -1 if needle is not part of haystack.",
+    inputFormat: "Line 1: haystack string\nLine 2: needle string",
+    outputFormat: "Integer index.",
+    constraints: ["1 <= haystack.length, needle.length <= 10^4"],
+    hint: "Slide a window of length len(needle) across haystack and compare substrings.",
+    starterCode: `def str_str(haystack, needle):
+    n, m = len(haystack), len(needle)
+    for i in range(n - m + 1):
+        if haystack[i:i+m] == needle:
+            return i
+    return -1
+
+haystack = input()
+needle = input()
+print(str_str(haystack, needle))`,
+    testInput: "sadbutsad\nsad\n",
+    expectedOutput: "0",
+    explanation: "'sad' first occurs at index 0 in 'sadbutsad'.",
+    complexity: { time: "O(n * m)", space: "O(m) for substring" },
+    commonMistakes: ["Using haystack.find() or haystack.index() which hides the algorithmic thinking.", "Off-by-one: iterating up to len(haystack) instead of len(haystack) - len(needle) + 1."]
+  },
+  lc392: {
+    id: "lc392",
+    title: "LC 392 - Is Subsequence",
+    url: "https://leetcode.com/problems/is-subsequence/",
+    statement: "Given two strings s and t, return true if s is a subsequence of t, or false otherwise. A subsequence is formed by deleting some (or no) characters from t without changing the order of the remaining characters.",
+    inputFormat: "Line 1: string s\nLine 2: string t",
+    outputFormat: "True or False.",
+    constraints: ["0 <= s.length <= 100", "0 <= t.length <= 10^4"],
+    hint: "Use a pointer for s. Scan through t; whenever t[j] matches s[i], advance i. If i reaches len(s), it's a subsequence.",
+    starterCode: `def is_subsequence(s, t):
+    i = 0
+    for ch in t:
+        if i < len(s) and ch == s[i]:
+            i += 1
+    return i == len(s)
+
+s = input()
+t = input()
+print(is_subsequence(s, t))`,
+    testInput: "abc\nahbgdc\n",
+    expectedOutput: "True",
+    explanation: "'a', 'b', 'c' appear in order within 'ahbgdc'.",
+    complexity: { time: "O(n)", space: "O(1)" },
+    commonMistakes: ["Trying to use 'in' operator which checks for substring, not subsequence."]
+  },
+  lc409: {
+    id: "lc409",
+    title: "LC 409 - Longest Palindrome",
+    url: "https://leetcode.com/problems/longest-palindrome/",
+    statement: "Given a string s which consists of lowercase or uppercase letters, return the length of the longest palindrome that can be built with those letters.",
+    inputFormat: "A single string.",
+    outputFormat: "Integer — max palindrome length.",
+    constraints: ["1 <= s.length <= 2000"],
+    hint: "Count character frequencies. Every character with an even count contributes fully. Odd counts contribute count-1. If any odd count exists, add 1 for the center.",
+    starterCode: `from collections import Counter
+
+def longest_palindrome(s):
+    counts = Counter(s)
+    length = 0
+    has_odd = False
+    for c in counts.values():
+        length += c // 2 * 2
+        if c % 2 == 1:
+            has_odd = True
+    return length + (1 if has_odd else 0)
+
+s = input()
+print(longest_palindrome(s))`,
+    testInput: "abccccdd\n",
+    expectedOutput: "7",
+    explanation: "Use all 4 c's and 2 d's (6), plus 1 odd char in the center = 7 ('dccaccd').",
+    complexity: { time: "O(n)", space: "O(1)" },
+    commonMistakes: ["Forgetting the +1 for the center character when odd counts exist.", "Trying to actually construct the palindrome instead of just computing the length."]
+  },
 
   // Day 5 Session 1
   lc167: {

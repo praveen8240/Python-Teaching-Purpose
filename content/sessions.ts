@@ -540,7 +540,30 @@ export const sessions: Session[] = [
         examples: [
           {
             title: "Subarray Sum Equals K (Prefix Sum + Dict)",
-            code: "def subarray_sum(nums, k):\n    count = 0\n    prefix_sum = 0\n    seen = {0: 1}  # prefix_sum → how many times we've seen it\n    \n    for num in nums:\n        prefix_sum += num\n        # If prefix_sum - k exists, there's a subarray summing to k\n        if prefix_sum - k in seen:\n            count += seen[prefix_sum - k]\n        seen[prefix_sum] = seen.get(prefix_sum, 0) + 1\n    \n    return count\n\nnums = [1, 1, 1]\nk = 2\nprint(f'Subarrays summing to {k}:', subarray_sum(nums, k))\n\nnums2 = [1, 2, 3]\nk2 = 3\nprint(f'Subarrays summing to {k2}:', subarray_sum(nums2, k2))",
+            code: `from collections import defaultdict
+def subarray_sum(nums,k):
+    # sum(i..j)=k -> count+=1
+    # prefix[j]-prefix[i-1]=k -> count+=1
+    # prefix[j]-k == prefix[i-1]
+    count=0
+    p_counts=defaultdict(int)
+    p_counts[0]=1
+    curr_sum=0
+    for num in nums:
+        curr_sum+=num
+        c = curr_sum -k
+        count+=p_counts[c]
+        p_counts[curr_sum]+=1
+    return count
+    
+    
+nums = [1, 1, 1]
+k = 2
+print(f'Subarrays summing to {k}:', subarray_sum(nums, k))
+
+nums2 = [1, 2, 3]
+k2 = 3
+print(f'Subarrays summing to {k2}:', subarray_sum(nums2, k2))`,
             expected: "Subarrays summing to 2: 2\nSubarrays summing to 3: 2",
             explanation: "Key insight: if prefix_sum[j] - prefix_sum[i] = k, then sum(nums[i+1..j]) = k. We store prefix sums in a dict and check if (current - k) was seen before. The {0: 1} initialization handles subarrays starting from index 0.",
             complexity: { time: "O(n)", space: "O(n)" }
@@ -570,47 +593,102 @@ export const sessions: Session[] = [
     day: 4,
     title: "Strings - Core Operations",
     duration: "2 hours",
-    description: "Understand string structures in Python, including immutability and character math.",
+    description: "Understand Python's string architecture — immutability, the O(n²) concatenation trap, character math with ord/chr, and the two-pointer palindrome pattern.",
     focus: ["str immutability", "concat O(n^2)", "list-and-join", "ord/chr arithmetic", "palindromes"],
-    objectives: ["Avoid quadratic concatenation traps", "Perform numeric offsets using ord() and chr()", "Implement efficient two-pointer palindrome checkers"],
+    objectives: ["Avoid quadratic concatenation traps", "Perform numeric offsets using ord() and chr()", "Implement efficient two-pointer palindrome checkers", "Know split/strip/join inside out"],
     sections: [
       {
         id: "overview",
         title: "Python String Architecture",
         kind: "strings",
-        intro: "Strings in Python are immutable. Every concatenation 's += char' creates a brand new string.",
+        intro: "Strings in Python are immutable. Every concatenation 's += char' creates a brand new string, copying ALL characters. This innocent-looking pattern is actually O(n²)!",
         bullets: [
-          "Concatenating in a loop takes O(n^2). Use list-and-join instead.",
-          "Character math: ord('a') returns 97, chr(97) returns 'a'.",
-          "Skip irrelevant whitespace and punctuation using alphanumeric checks."
+          "IMMUTABLE: s[0] = 'X' → TypeError! Once created, a string cannot be changed in place.",
+          "s += 'a' in a loop → O(n²) total because each += creates a new string of length 1+2+3+...+n.",
+          "The fix: append to a list, then ''.join(list) at the end → O(n) total. One allocation!",
+          "split() breaks a string into a list of words. strip() removes leading/trailing whitespace.",
+          "Strings are hashable → can be dict keys and set elements. Lists cannot!"
         ]
       },
       {
+        id: "ordchr",
+        title: "Interactive: ord() / chr() Character Math",
+        kind: "ordchr",
+        intro: "Type any character to see its ASCII value and array index. This is the foundation for frequency-counting with a size-26 list instead of a dict."
+      },
+      {
         id: "worked",
-        title: "Worked Examples: Strings",
+        title: "Worked Examples: String Fundamentals",
         kind: "worked",
-        intro: "Let's see the right way to manipulate strings.",
+        intro: "Master the essential string patterns that appear in every coding interview.",
         examples: [
           {
-            title: "O(n) String Building",
-            code: "words = ['Hello', 'World', 'Python']\nchars = []\nfor w in words:\n    chars.append(w)\nresult = ' '.join(chars)\nprint(result)",
-            expected: "Hello World Python",
-            explanation: "Appending to a list and joining at the end is O(n), avoiding the O(n^2) trap of string concatenation."
+            title: "O(n²) Trap vs O(n) Fix",
+            code: "import time\n\n# BAD: O(n^2) concatenation\ndef build_bad(n):\n    s = ''\n    for i in range(n):\n        s += str(i % 10)\n    return s\n\n# GOOD: O(n) list-and-join\ndef build_good(n):\n    parts = []\n    for i in range(n):\n        parts.append(str(i % 10))\n    return ''.join(parts)\n\nn = 50000\nstart = time.time()\nbuild_bad(n)\nprint(f'Bad (s += char): {time.time()-start:.4f}s')\n\nstart = time.time()\nbuild_good(n)\nprint(f'Good (join):      {time.time()-start:.4f}s')",
+            expected: "Bad (s += char): ~0.02s\nGood (join):      ~0.01s",
+            explanation: "For small n, both are fast. But at n=1,000,000 the bad version takes seconds while join stays instant. Always use list-and-join!",
+            complexity: { time: "O(n) with join, O(n²) with +=", space: "O(n)" }
           },
           {
-            title: "Character Math",
-            code: "char = 'c'\noffset = ord(char) - ord('a')\nprint(f'{char} is offset by {offset} from a')\nnext_char = chr(ord(char) + 1)\nprint(f'Next character is {next_char}')",
-            expected: "c is offset by 2 from a\nNext character is d",
-            explanation: "ord() gets the ASCII value. You can use it to map 'a'-'z' to 0-25."
+            title: "Character Math: Caesar Cipher",
+            code: "def caesar_encrypt(text, shift):\n    result = []\n    for ch in text:\n        if ch.isalpha():\n            base = ord('A') if ch.isupper() else ord('a')\n            # Shift within 0-25, then convert back\n            new_ch = chr((ord(ch) - base + shift) % 26 + base)\n            result.append(new_ch)\n        else:\n            result.append(ch)\n    return ''.join(result)\n\nprint(caesar_encrypt('Hello, World!', 3))\nprint(caesar_encrypt('Khoor, Zruog!', -3))  # Decrypt",
+            expected: "Khoor, Zruog!\nHello, World!",
+            explanation: "ord(ch) - ord('a') gives 0-25 index. Add shift, mod 26 to wrap around, add base back. This pattern is used in many string manipulation problems.",
+            complexity: { time: "O(n)", space: "O(n)" }
+          },
+          {
+            title: "split(), strip(), and join() Mastery",
+            code: "# split() — break string into list\nsentence = '  Hello   World  Python  '\nwords = sentence.split()  # splits on ANY whitespace\nprint('Words:', words)\n\n# strip() — remove leading/trailing whitespace\nprint('Stripped:', repr(sentence.strip()))\n\n# join() — combine list into string\nprint('Joined:', '-'.join(words))\n\n# split with delimiter\ncsv = 'alice,bob,charlie'\nprint('CSV split:', csv.split(','))",
+            expected: "Words: ['Hello', 'World', 'Python']\nStripped: 'Hello   World  Python'\nJoined: Hello-World-Python\nCSV split: ['alice', 'bob', 'charlie']",
+            explanation: "split() without args splits on any whitespace and removes empty strings. split(',') splits on exactly that delimiter. strip() only removes from edges, not middle.",
+            complexity: { time: "O(n)", space: "O(n)" }
           }
         ]
       },
       {
+        id: "palindrome_viz",
+        title: "Interactive: Two-Pointer Palindrome Checker",
+        kind: "palindrome",
+        intro: "Type any string and watch the two-pointer technique check it character by character. The algorithm cleans the input first (lowercase + remove non-alphanumeric), then compares from both ends."
+      },
+      {
+        id: "string_quiz",
+        title: "Brain Teasers: String Traps",
+        kind: "quiz",
+        intro: "Can you spot the common string traps that catch most Python beginners?"
+      },
+      {
         id: "strings_core",
-        title: "Practice Problems",
+        title: "Practice Problems: String Fundamentals",
         kind: "practice",
-        intro: "Perform in-place character swaps and string structure analysis.",
-        problems: [day2_to_5Problems.lc344, day2_to_5Problems.lc125]
+        intro: "Reverse strings in-place, check palindromes, find substrings, and verify subsequences.",
+        problems: [day2_to_5Problems.lc344, day2_to_5Problems.lc125, day2_to_5Problems.lc28, day2_to_5Problems.lc392]
+      }
+    ],
+    quiz: [
+      {
+        question: "What is the output?\n\ns = 'hello'\ns[0] = 'H'\nprint(s)",
+        options: ["Hello", "hello", "TypeError: 'str' object does not support item assignment", "H"],
+        answer: 2,
+        explanation: "Strings in Python are IMMUTABLE. You cannot modify a character in-place. s[0] = 'H' raises a TypeError."
+      },
+      {
+        question: "What is the output?\n\ns = 'hello world'\nprint(s.split('l'))",
+        options: ["['he', '', 'o wor', 'd']", "['he', 'o wor', 'd']", "['hello', 'world']", "Error"],
+        answer: 0,
+        explanation: "split('l') splits at every 'l'. Between the two consecutive l's, there's an empty string. Result: ['he', '', 'o wor', 'd']."
+      },
+      {
+        question: "Which builds a string of n characters FASTER?\n\nA: s = ''; for c in chars: s += c\nB: s = ''.join(chars)",
+        options: ["B is faster — O(n) vs O(n²)", "A is faster — direct concatenation", "Both are equal — Python optimizes +=", "Depends on the string length"],
+        answer: 0,
+        explanation: "Option A creates a new string on every iteration, copying all previous characters → O(1+2+...+n) = O(n²). Option B calculates total length once, allocates once → O(n)."
+      },
+      {
+        question: "What is ord('a') - ord('A')?",
+        options: ["32", "26", "0", "65"],
+        answer: 0,
+        explanation: "ord('a') = 97, ord('A') = 65. The difference is 32. This is why s.lower() works — it adds 32 to uppercase ASCII values."
       }
     ]
   },
@@ -619,27 +697,89 @@ export const sessions: Session[] = [
     day: 4,
     title: "Strings - Pattern Problems",
     duration: "2 hours",
-    description: "Solve common string manipulation problems using frequency signatures and pointers.",
-    focus: ["Anagram checks", "frequency signatures", "run-length compression", "format parsing"],
-    objectives: ["Compress strings in-place", "Compare string prefixes efficiently", "Design string frequency mappings"],
+    description: "Solve pattern-based string problems: anagram checking with frequency signatures, in-place run-length compression, longest common prefix, and building longest palindromes from character counts.",
+    focus: ["Anagram checks", "frequency signatures", "run-length compression", "prefix scanning", "palindrome building"],
+    objectives: ["Compare strings via frequency counts in O(n)", "Compress strings in-place with read/write pointers", "Scan prefixes vertically across multiple strings", "Build palindromes from character frequency analysis"],
     sections: [
       {
         id: "overview",
-        title: "String Patterns",
+        title: "String Pattern Toolkit",
         kind: "text",
-        intro: "Solving string puzzles requires maintaining pointers for reading, writing, or matching patterns.",
+        intro: "Most string pattern problems boil down to one of these core techniques. Master them and you'll recognize the pattern instantly in interviews.",
         bullets: [
-          "Group occurrences in-place by writing characters and their counts.",
-          "Check multiple prefixes vertically to find matching characters.",
-          "Build frequency signatures to quickly evaluate structural equality."
+          "Frequency signature: two strings are anagrams iff they have identical character counts. Compare with Counter or a size-26 list.",
+          "Read/write pointers: scan with 'read', overwrite with 'write'. Perfect for in-place compression and deduplication.",
+          "Vertical scanning: for prefix problems, compare all strings at position 0, then position 1, etc. Stop at first mismatch.",
+          "Character budget: to build the longest palindrome, use all even counts + (count-1) for odd counts + 1 center character."
         ]
       },
       {
+        id: "compress_viz",
+        title: "Interactive: Run-Length String Compression",
+        kind: "str-compress",
+        intro: "Step through the read/write pointer technique. The 'read' pointer finds groups of consecutive characters, the 'write' pointer overwrites the array in-place with char + count."
+      },
+      {
+        id: "worked_patterns",
+        title: "Worked Examples: String Patterns",
+        kind: "worked",
+        intro: "Detailed walkthroughs of the key string patterns.",
+        examples: [
+          {
+            title: "Anagram Check: Frequency Counting",
+            code: "from collections import Counter\n\ndef is_anagram(s, t):\n    # Method 1: Counter comparison\n    return Counter(s) == Counter(t)\n\ndef is_anagram_manual(s, t):\n    # Method 2: Size-26 list (faster, no hashing)\n    if len(s) != len(t): return False\n    freq = [0] * 26\n    for c in s: freq[ord(c) - ord('a')] += 1\n    for c in t: freq[ord(c) - ord('a')] -= 1\n    return all(f == 0 for f in freq)\n\nprint(is_anagram('anagram', 'nagaram'))  # True\nprint(is_anagram('rat', 'car'))          # False\nprint(is_anagram_manual('listen', 'silent'))  # True",
+            expected: "True\nFalse\nTrue",
+            explanation: "Counter comparison is clean but involves hashing. The size-26 list method is faster: increment for s, decrement for t, check all zeros. Both are O(n).",
+            complexity: { time: "O(n)", space: "O(1) — at most 26 counters" }
+          },
+          {
+            title: "Longest Common Prefix: Vertical Scan",
+            code: "def longest_common_prefix(strs):\n    if not strs: return ''\n    \n    # Compare character by character across ALL strings\n    for i in range(len(strs[0])):\n        char = strs[0][i]\n        for s in strs[1:]:\n            if i >= len(s) or s[i] != char:\n                return strs[0][:i]\n    return strs[0]\n\nprint(longest_common_prefix(['flower', 'flow', 'flight']))\nprint(longest_common_prefix(['dog', 'racecar', 'car']))\nprint(longest_common_prefix(['interspecies', 'interstellar', 'interstate']))",
+            expected: "fl\n\ninters",
+            explanation: "We scan vertically: check index 0 of all strings, then index 1, etc. The moment any string is too short or has a different character, we stop.",
+            complexity: { time: "O(S) where S = total chars in all strings", space: "O(1)" }
+          },
+          {
+            title: "Building Longest Palindrome from Characters",
+            code: "from collections import Counter\n\ndef longest_palindrome(s):\n    counts = Counter(s)\n    length = 0\n    has_odd = False\n    \n    for c in counts.values():\n        # Use pairs: floor(c/2) * 2\n        length += (c // 2) * 2\n        if c % 2 == 1:\n            has_odd = True\n    \n    # One odd character can go in the center\n    return length + (1 if has_odd else 0)\n\nprint('abccccdd →', longest_palindrome('abccccdd'))\nprint('aA →', longest_palindrome('aA'))",
+            expected: "abccccdd → 7\naA → 1",
+            explanation: "For 'abccccdd': a(1), b(1), c(4), d(2). Pairs: c gives 4, d gives 2 = 6. One odd char can sit in center = 7. Result: something like 'dccaccd'.",
+            complexity: { time: "O(n)", space: "O(1)" }
+          }
+        ]
+      },
+      {
+        id: "pattern_quiz",
+        title: "Brain Teasers: String Patterns",
+        kind: "quiz",
+        intro: "Test your understanding of string pattern concepts!"
+      },
+      {
         id: "strings_patterns",
-        title: "Practice Problems",
+        title: "Practice Problems: String Patterns",
         kind: "practice",
-        intro: "Work with string compression, anagram validity, and prefix searches.",
-        problems: [day2_to_5Problems.lc242, day2_to_5Problems.lc443, day2_to_5Problems.lc14]
+        intro: "Validate anagrams, compress strings, find common prefixes, and build palindromes.",
+        problems: [day2_to_5Problems.lc242, day2_to_5Problems.lc443, day2_to_5Problems.lc14, day2_to_5Problems.lc409]
+      }
+    ],
+    quiz: [
+      {
+        question: "What is the output?\n\nfrom collections import Counter\nprint(Counter('banana'))",
+        options: ["Counter({'a': 3, 'n': 2, 'b': 1})", "Counter({'b': 1, 'a': 3, 'n': 2})", "{'b': 1, 'a': 3, 'n': 2}", "Error: strings are not iterable"],
+        answer: 0,
+        explanation: "Counter counts each character. 'banana' has a:3, n:2, b:1. Counter orders by most common first."
+      },
+      {
+        question: "Are 'Listen' and 'Silent' anagrams?",
+        options: ["No — 'L' ≠ 'S', case matters", "Yes — after converting both to lowercase", "Depends on the implementation", "Error — strings have different lengths"],
+        answer: 0,
+        explanation: "Without .lower(), 'L' and 'S' are different characters. Most interview problems specify 'lowercase only' to avoid this. Always clarify constraints!"
+      },
+      {
+        question: "What does 'abc' + 'def' cost in terms of time complexity?",
+        options: ["O(n) where n is total length", "O(1) — just pointer concatenation", "O(n²) — strings are immutable", "O(n log n) — sorting involved"],
+        answer: 0,
+        explanation: "A single concatenation of two strings of lengths a and b costs O(a + b) because Python must allocate a new string and copy both. The O(n²) trap only occurs in LOOPS."
       }
     ]
   },
